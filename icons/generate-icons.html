@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>生成App图标</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
+    h1 { color: #333; }
+    p { color: #666; margin-bottom: 20px; }
+    .icons { display: flex; flex-wrap: wrap; gap: 10px; }
+    .icon-item { text-align: center; }
+    canvas { border: 1px solid #ccc; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; }
+    .icon-item span { display: block; margin-top: 5px; font-size: 12px; color: #666; }
+    button { padding: 10px 20px; background: #4338ca; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px; }
+    button:hover { background: #6366f1; }
+  </style>
+</head>
+<body>
+  <h1>五十音学习 App 图标生成器</h1>
+  <p>点击下方按钮下载所有尺寸的图标，然后保存到 icons 文件夹中</p>
+
+  <div class="icons" id="icons"></div>
+
+  <button onclick="generateAllIcons()">重新生成所有图标</button>
+
+  <script>
+    const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+
+    function drawIcon(canvas, size) {
+      const ctx = canvas.getContext('2d');
+      canvas.width = size;
+      canvas.height = size;
+
+      // 背景渐变
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#667eea');
+      gradient.addColorStop(1, '#764ba2');
+
+      // 圆角矩形背景
+      const radius = size * 0.2;
+      ctx.beginPath();
+      ctx.moveTo(radius, 0);
+      ctx.lineTo(size - radius, 0);
+      ctx.quadraticCurveTo(size, 0, size, radius);
+      ctx.lineTo(size, size - radius);
+      ctx.quadraticCurveTo(size, size, size - radius, size);
+      ctx.lineTo(radius, size);
+      ctx.quadraticCurveTo(0, size, 0, size - radius);
+      ctx.lineTo(0, radius);
+      ctx.quadraticCurveTo(0, 0, radius, 0);
+      ctx.closePath();
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      // 平假名 "あ"
+      const fontSize = size * 0.45;
+      ctx.font = `${fontSize}px "Hiragino Kaku Gothic Pro", "Meiryo", "MS Gothic", sans-serif`;
+      ctx.fillStyle = 'white';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('あ', size / 2, size * 0.42);
+
+      // 底部文字
+      const smallFontSize = size * 0.15;
+      ctx.font = `bold ${smallFontSize}px sans-serif`;
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.fillText('50音', size / 2, size * 0.78);
+    }
+
+    function generateAllIcons() {
+      const container = document.getElementById('icons');
+      container.innerHTML = '';
+
+      sizes.forEach(size => {
+        const canvas = document.createElement('canvas');
+        drawIcon(canvas, size);
+
+        const item = document.createElement('div');
+        item.className = 'icon-item';
+
+        const label = document.createElement('span');
+        label.textContent = `${size}x${size}`;
+
+        item.appendChild(canvas);
+        item.appendChild(label);
+        container.appendChild(item);
+
+        // 触发下载
+        setTimeout(() => {
+          const link = document.createElement('a');
+          link.download = `icon-${size}.png`;
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        }, 100);
+      });
+    }
+
+    // 页面加载时自动生成
+    window.onload = generateAllIcons;
+  </script>
+</body>
+</html>
