@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#4338ca">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="五十音学习">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <title>日语五十音图学习</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 12px;
+    }
+
+    #app {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
+      color: white;
+      padding: 16px 20px;
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    nav {
+      display: flex;
+      gap: 8px;
+    }
+
+    nav button {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.3s;
+    }
+
+    nav button:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    nav button:active {
+      background: white;
+      color: #4338ca;
+    }
+
+    nav button.active {
+      background: white;
+      color: #4338ca;
+    }
+
+    main {
+      padding: 16px;
+    }
+
+    section {
+      display: none;
+    }
+
+    section.active {
+      display: block;
+    }
+
+    /* 卡片筛选器 */
+    #cards-filter {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    #cards-filter button {
+      padding: 6px 12px;
+      border: 2px solid #e0e7ff;
+      background: white;
+      color: #4338ca;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.3s;
+    }
+
+    #cards-filter button:active {
+      border-color: #6366f1;
+    }
+
+    #cards-filter button.active {
+      background: #4338ca;
+      color: white;
+      border-color: #4338ca;
+    }
+
+    /* 卡片网格 */
+    #cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .kana-card {
+      background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);
+      border-radius: 12px;
+      padding: 12px 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 2px solid transparent;
+    }
+
+    .kana-card:active {
+      transform: scale(0.95);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      border-color: #6366f1;
+    }
+
+    .kana-card .hiragana {
+      font-size: 1.8rem;
+      color: #1e293b;
+      margin-bottom: 2px;
+    }
+
+    .kana-card .katakana {
+      font-size: 1.2rem;
+      color: #64748b;
+      margin-bottom: 2px;
+    }
+
+    .kana-card .roma {
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+
+    .kana-card .type-badge {
+      display: inline-block;
+      font-size: 0.6rem;
+      padding: 2px 4px;
+      border-radius: 4px;
+      margin-top: 2px;
+    }
+
+    .kana-card .type-badge.清音 { background: #dbeafe; color: #1d4ed8; }
+    .kana-card .type-badge.濁音 { background: #fce7f3; color: #be185d; }
+    .kana-card .type-badge.半濁音 { background: #d1fae5; color: #047857; }
+    .kana-card .type-badge.拗音 { background: #fef3c7; color: #b45309; }
+
+    /* 详情面板 - 全屏移动端 */
+    #detail-panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      background: white;
+      padding: 20px;
+      transition: transform 0.3s ease;
+      z-index: 1000;
+      overflow-y: auto;
+      transform: translateX(100%);
+    }
+
+    #detail-panel.show {
+      transform: translateX(0);
+    }
+
+    #detail-panel .close-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: #f1f5f9;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: #64748b;
+    }
+
+    #detail-panel .close-btn:active {
+      background: #e2e8f0;
+    }
+
+    #detail-kana-display {
+      text-align: center;
+      margin-bottom: 16px;
+      padding-top: 10px;
+    }
+
+    #detail-kana-display .hiragana {
+      font-size: 5rem;
+      color: #1e293b;
+    }
+
+    #detail-kana-display .katakana {
+      font-size: 3rem;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    #detail-romaji {
+      text-align: center;
+      font-size: 1.3rem;
+      color: #6366f1;
+      margin-bottom: 16px;
+    }
+
+    #detail-stroke-container {
+      width: 100%;
+      max-width: 280px;
+      height: 160px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      background: #fafafa;
+      margin: 0 auto 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #detail-stroke-gifs {
+      display: none;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      height: 100%;
+    }
+
+    #detail-stroke-gifs.show {
+      display: flex;
+    }
+
+    .gif-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+    }
+
+    .gif-label {
+      font-size: 0.7rem;
+      color: #64748b;
+      margin-bottom: 2px;
+    }
+
+    .gif-wrapper img {
+      width: 100%;
+      height: calc(100% - 16px);
+      object-fit: contain;
+    }
+
+    #detail-stroke-gif-h, #detail-stroke-gif-k {
+      display: none;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    #detail-stroke-gif-h.show, #detail-stroke-gif-k.show {
+      display: block;
+    }
+
+    #detail-stroke-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #detail-stroke-svg.hidden {
+      display: none;
+    }
+
+    .stroke-path {
+      fill: none;
+      stroke: #333;
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 500;
+      stroke-dashoffset: 500;
+    }
+
+    .stroke-path.animating {
+      animation: drawStroke 0.6s ease forwards;
+    }
+
+    @keyframes drawStroke {
+      to { stroke-dashoffset: 0; }
+    }
+
+    #detail-stroke-desc {
+      text-align: center;
+      color: #64748b;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    /* 按钮区域 */
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 280px;
+      margin: 0 auto;
+    }
+
+    #btn-play-audio {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    #btn-play-audio:active {
+      transform: scale(0.98);
+    }
+
+    #btn-replay-stroke {
+      width: 100%;
+      padding: 14px;
+      background: #f1f5f9;
+      color: #4338ca;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #btn-replay-stroke:active {
+      background: #e2e8f0;
+    }
+
+    /* 遮罩层 */
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+      display: none;
+    }
+
+    #overlay.show {
+      display: block;
+    }
+
+    /* 测验区 */
+    #quiz-mode-switch {
+      display: flex;
+      gap: 8px;
+      max-width: 280px;
+      margin: 0 auto 16px;
+    }
+
+    #quiz-mode-switch .mode-btn {
+      flex: 1;
+      padding: 10px 14px;
+      border: 2px solid #e0e7ff;
+      background: white;
+      color: #4338ca;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+    }
+
+    #quiz-mode-switch .mode-btn:active {
+      border-color: #6366f1;
+    }
+
+    #quiz-mode-switch .mode-btn.active {
+      background: #4338ca;
+      color: white;
+      border-color: #4338ca;
+    }
+
+    #quiz-score {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #4338ca;
+      margin-bottom: 20px;
+    }
+
+    #quiz-score span {
+      font-weight: bold;
+      font-size: 1.5rem;
+    }
+
+    #quiz-question {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    #quiz-romaji {
+      font-size: 3.5rem;
+      font-weight: bold;
+      color: #1e293b;
+      margin-bottom: 6px;
+    }
+
+    #quiz-type-hint {
+      font-size: 0.95rem;
+      color: #64748b;
+    }
+
+    #quiz-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      max-width: 360px;
+      margin: 0 auto 20px;
+    }
+
+    .quiz-option {
+      padding: 18px;
+      background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);
+      border: 3px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 1.8rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .quiz-option:active:not(.disabled) {
+      border-color: #6366f1;
+      transform: scale(0.95);
+    }
+
+    .quiz-option.correct {
+      background: #d1fae5;
+      border-color: #047857;
+      color: #047857;
+    }
+
+    .quiz-option.wrong {
+      background: #fee2e2;
+      border-color: #dc2626;
+      color: #dc2626;
+    }
+
+    .quiz-option.disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    #quiz-result {
+      text-align: center;
+      font-size: 1.3rem;
+      margin-bottom: 16px;
+      min-height: 32px;
+    }
+
+    #quiz-result.correct { color: #047857; }
+    #quiz-result.wrong { color: #dc2626; }
+
+    #btn-next {
+      display: block;
+      width: 180px;
+      margin: 0 auto;
+      padding: 14px;
+      background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    #btn-next:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    #btn-next:disabled {
+      background: #cbd5e1;
+      cursor: not-allowed;
+    }
+
+    #btn-replay-quiz {
+      display: block;
+      width: 180px;
+      margin: 0 auto 12px;
+      padding: 12px;
+      background: #f1f5f9;
+      color: #4338ca;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #btn-replay-quiz:active {
+      background: #e2e8f0;
+    }
+
+    .quiz-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+
+    .quiz-actions .action-btn {
+      padding: 10px 16px;
+      background: #f1f5f9;
+      color: #4338ca;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .quiz-actions .action-btn:active {
+      background: #e2e8f0;
+    }
+
+    #btn-favorite.active {
+      background: #fef3c7;
+      border-color: #f59e0b;
+      color: #b45309;
+    }
+
+    #quiz-fav-count {
+      text-align: center;
+      color: #64748b;
+      font-size: 0.9rem;
+      margin-top: 12px;
+    }
+
+    /* 响应式微调 */
+    @media (min-width: 600px) {
+      body { padding: 20px; }
+      header { padding: 20px 24px; }
+      header h1 { font-size: 1.6rem; }
+      main { padding: 20px; }
+      #cards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 12px;
+      }
+      .kana-card .hiragana { font-size: 2rem; }
+      .kana-card .katakana { font-size: 1.4rem; }
+      #quiz-romaji { font-size: 4rem; }
+      .quiz-option { font-size: 2rem; padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>日语五十音图学习</h1>
+      <nav>
+        <button id="tab-cards" class="active">五十音卡片</button>
+        <button id="tab-quiz">测验模式</button>
+      </nav>
+    </header>
+
+    <main>
+      <!-- 卡片展示区 -->
+      <section id="section-cards" class="active">
+        <div id="cards-filter">
+          <button data-filter="all" class="active">全部</button>
+          <button data-filter="清音">清音</button>
+          <button data-filter="濁音">濁音</button>
+          <button data-filter="半濁音">半濁音</button>
+          <button data-filter="拗音">拗音</button>
+        </div>
+        <div id="cards-grid"></div>
+      </section>
+
+      <!-- 测验区 -->
+      <section id="section-quiz">
+        <div id="quiz-mode-switch">
+          <button id="btn-mode-roma" class="mode-btn active">罗马音→假名</button>
+          <button id="btn-mode-kana" class="mode-btn">假名→罗马音</button>
+          <button id="btn-mode-fav" class="mode-btn">⭐ 收藏</button>
+        </div>
+        <div id="quiz-score">得分: <span id="score-value">0</span></div>
+        <div id="quiz-question">
+          <div id="quiz-romaji"></div>
+          <div id="quiz-type-hint"></div>
+        </div>
+        <div id="quiz-options"></div>
+        <div id="quiz-result"></div>
+        <div class="quiz-actions">
+          <button id="btn-favorite" class="action-btn">☆ 收藏此题</button>
+          <button id="btn-replay-quiz" class="action-btn">🔊 重播发音</button>
+        </div>
+        <button id="btn-next" disabled>下一题</button>
+        <div id="quiz-fav-count"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 详情面板 -->
+  <div id="overlay"></div>
+  <div id="detail-panel">
+    <button class="close-btn" id="btn-close-detail">×</button>
+    <div id="detail-kana-display">
+      <div class="hiragana" id="detail-h"></div>
+      <div class="katakana" id="detail-k"></div>
+    </div>
+    <div id="detail-romaji"></div>
+    <div id="detail-stroke-container">
+      <div id="detail-stroke-gifs">
+        <div class="gif-wrapper">
+          <span class="gif-label">平假名</span>
+          <img id="detail-stroke-gif-h" alt="平假名笔顺动画">
+        </div>
+        <div class="gif-wrapper">
+          <span class="gif-label">片假名</span>
+          <img id="detail-stroke-gif-k" alt="片假名笔顺动画">
+        </div>
+      </div>
+      <svg id="detail-stroke-svg" viewBox="0 0 100 100" class="hidden"></svg>
+    </div>
+    <div id="detail-stroke-desc"></div>
+    <div class="btn-group">
+      <button id="btn-play-audio">🔊 播放读音</button>
+      <button id="btn-replay-stroke">🔄 重新播放笔顺</button>
+    </div>
+  </div>
+
+  <script>
+    // ========================================
+    // 五十音完整数据（107个假名）
+    // ========================================
+    const gojūonData = [
+      // 清音 - あ行
+      { roma: 'a', h: 'あ', k: 'ア', type: '清音', row: 'あ行' },
+      { roma: 'i', h: 'い', k: 'イ', type: '清音', row: 'あ行' },
+      { roma: 'u', h: 'う', k: 'ウ', type: '清音', row: 'あ行' },
+      { roma: 'e', h: 'え', k: 'エ', type: '清音', row: 'あ行' },
+      { roma: 'o', h: 'お', k: 'オ', type: '清音', row: 'あ行' },
+      // か行
+      { roma: 'ka', h: 'か', k: 'カ', type: '清音', row: 'か行' },
+      { roma: 'ki', h: 'き', k: 'キ', type: '清音', row: 'か行' },
+      { roma: 'ku', h: 'く', k: 'ク', type: '清音', row: 'か行' },
+      { roma: 'ke', h: 'け', k: 'ケ', type: '清音', row: 'か行' },
+      { roma: 'ko', h: 'こ', k: 'コ', type: '清音', row: 'か行' },
+      // さ行
+      { roma: 'sa', h: 'さ', k: 'サ', type: '清音', row: 'さ行' },
+      { roma: 'shi', h: 'し', k: 'シ', type: '清音', row: 'さ行' },
+      { roma: 'su', h: 'す', k: 'ス', type: '清音', row: 'さ行' },
+      { roma: 'se', h: 'せ', k: 'セ', type: '清音', row: 'さ行' },
+      { roma: 'so', h: 'そ', k: 'ソ', type: '清音', row: 'さ行' },
+      // た行
+      { roma: 'ta', h: 'た', k: 'タ', type: '清音', row: 'た行' },
+      { roma: 'chi', h: 'ち', k: 'チ', type: '清音', row: 'た行' },
+      { roma: 'tsu', h: 'つ', k: 'ツ', type: '清音', row: 'た行' },
+      { roma: 'te', h: 'て', k: 'テ', type: '清音', row: 'た行' },
+      { roma: 'to', h: 'と', k: 'ト', type: '清音', row: 'た行' },
+      // な行
+      { roma: 'na', h: 'な', k: 'ナ', type: '清音', row: 'な行' },
+      { roma: 'ni', h: 'に', k: 'ニ', type: '清音', row: 'な行' },
+      { roma: 'nu', h: 'ぬ', k: 'ヌ', type: '清音', row: 'な行' },
+      { roma: 'ne', h: 'ね', k: 'ネ', type: '清音', row: 'な行' },
+      { roma: 'no', h: 'の', k: 'ノ', type: '清音', row: 'な行' },
+      // は行
+      { roma: 'ha', h: 'は', k: 'ハ', type: '清音', row: 'は行' },
+      { roma: 'hi', h: 'ひ', k: 'ヒ', type: '清音', row: 'は行' },
+      { roma: 'fu', h: 'ふ', k: 'フ', type: '清音', row: 'は行' },
+      { roma: 'he', h: 'へ', k: 'ヘ', type: '清音', row: 'は行' },
+      { roma: 'ho', h: 'ほ', k: 'ホ', type: '清音', row: 'は行' },
+      // ま行
+      { roma: 'ma', h: 'ま', k: 'マ', type: '清音', row: 'ま行' },
+      { roma: 'mi', h: 'み', k: 'ミ', type: '清音', row: 'ま行' },
+      { roma: 'mu', h: 'む', k: 'ム', type: '清音', row: 'ま行' },
+      { roma: 'me', h: 'め', k: 'メ', type: '清音', row: 'ま行' },
+      { roma: 'mo', h: 'も', k: 'モ', type: '清音', row: 'ま行' },
+      // や行
+      { roma: 'ya', h: 'や', k: 'ヤ', type: '清音', row: 'や行' },
+      { roma: 'yu', h: 'ゆ', k: 'ユ', type: '清音', row: 'や行' },
+      { roma: 'yo', h: 'よ', k: 'ヨ', type: '清音', row: 'や行' },
+      // ら行
+      { roma: 'ra', h: 'ら', k: 'ラ', type: '清音', row: 'ら行' },
+      { roma: 'ri', h: 'り', k: 'リ', type: '清音', row: 'ら行' },
+      { roma: 'ru', h: 'る', k: 'ル', type: '清音', row: 'ら行' },
+      { roma: 're', h: 'れ', k: 'レ', type: '清音', row: 'ら行' },
+      { roma: 'ro', h: 'ろ', k: 'ロ', type: '清音', row: 'ら行' },
+      // わ行
+      { roma: 'wa', h: 'わ', k: 'ワ', type: '清音', row: 'わ行' },
+      { roma: 'wo', h: 'を', k: 'ヲ', type: '清音', row: 'わ行' },
+      { roma: 'n', h: 'ん', k: 'ン', type: '清音', row: '拨音' },
+      // 濁音 - が行
+      { roma: 'ga', h: 'が', k: 'ガ', type: '濁音', row: 'が行' },
+      { roma: 'gi', h: 'ぎ', k: 'ギ', type: '濁音', row: 'が行' },
+      { roma: 'gu', h: 'ぐ', k: 'グ', type: '濁音', row: 'が行' },
+      { roma: 'ge', h: 'げ', k: 'ゲ', type: '濁音', row: 'が行' },
+      { roma: 'go', h: 'ご', k: 'ゴ', type: '濁音', row: 'が行' },
+      // ざ行
+      { roma: 'za', h: 'ざ', k: 'ザ', type: '濁音', row: 'ざ行' },
+      { roma: 'ji', h: 'じ', k: 'ジ', type: '濁音', row: 'ざ行' },
+      { roma: 'zu', h: 'ず', k: 'ズ', type: '濁音', row: 'ざ行' },
+      { roma: 'ze', h: 'ぜ', k: 'ゼ', type: '濁音', row: 'ざ行' },
+      { roma: 'zo', h: 'ぞ', k: 'ゾ', type: '濁音', row: 'ざ行' },
+      // だ行
+      { roma: 'da', h: 'だ', k: 'ダ', type: '濁音', row: 'だ行' },
+      { roma: 'di', h: 'ぢ', k: 'ヂ', type: '濁音', row: 'だ行' },
+      { roma: 'du', h: 'づ', k: 'ヅ', type: '濁音', row: 'だ行' },
+      { roma: 'de', h: 'で', k: 'デ', type: '濁音', row: 'だ行' },
+      { roma: 'do', h: 'ど', k: 'ド', type: '濁音', row: 'だ行' },
+      // ば行
+      { roma: 'ba', h: 'ば', k: 'バ', type: '濁音', row: 'ば行' },
+      { roma: 'bi', h: 'び', k: 'ビ', type: '濁音', row: 'ば行' },
+      { roma: 'bu', h: 'ぶ', k: 'ブ', type: '濁音', row: 'ば行' },
+      { roma: 'be', h: 'べ', k: 'ベ', type: '濁音', row: 'ば行' },
+      { roma: 'bo', h: 'ぼ', k: 'ボ', type: '濁音', row: 'ば行' },
+      // 半濁音
+      { roma: 'pa', h: 'ぱ', k: 'パ', type: '半濁音', row: 'ぱ行' },
+      { roma: 'pi', h: 'ぴ', k: 'ピ', type: '半濁音', row: 'ぱ行' },
+      { roma: 'pu', h: 'ぷ', k: 'プ', type: '半濁音', row: 'ぱ行' },
+      { roma: 'pe', h: 'ぺ', k: 'ペ', type: '半濁音', row: 'ぱ行' },
+      { roma: 'po', h: 'ぽ', k: 'ポ', type: '半濁音', row: 'ぱ行' },
+      // 拗音 - か行拗音
+      { roma: 'kya', h: 'きゃ', k: 'キャ', type: '拗音', row: 'か行拗音' },
+      { roma: 'kyu', h: 'きゅ', k: 'キュ', type: '拗音', row: 'か行拗音' },
+      { roma: 'kyo', h: 'きょ', k: 'キョ', type: '拗音', row: 'か行拗音' },
+      // さ行拗音
+      { roma: 'sha', h: 'しゃ', k: 'シャ', type: '拗音', row: 'さ行拗音' },
+      { roma: 'shu', h: 'しゅ', k: 'シュ', type: '拗音', row: 'さ行拗音' },
+      { roma: 'sho', h: 'しょ', k: 'ショ', type: '拗音', row: 'さ行拗音' },
+      // た行拗音
+      { roma: 'cha', h: 'ちゃ', k: 'チャ', type: '拗音', row: 'た行拗音' },
+      { roma: 'chu', h: 'ちゅ', k: 'チュ', type: '拗音', row: 'た行拗音' },
+      { roma: 'cho', h: 'ちょ', k: 'チョ', type: '拗音', row: 'た行拗音' },
+      // な行拗音
+      { roma: 'nya', h: 'にゃ', k: 'ニャ', type: '拗音', row: 'な行拗音' },
+      { roma: 'nyu', h: 'にゅ', k: 'ニュ', type: '拗音', row: 'な行拗音' },
+      { roma: 'nyo', h: 'にょ', k: 'ニョ', type: '拗音', row: 'な行拗音' },
+      // は行拗音
+      { roma: 'hya', h: 'ひゃ', k: 'ヒャ', type: '拗音', row: 'は行拗音' },
+      { roma: 'hyu', h: 'ひゅ', k: 'ヒュ', type: '拗音', row: 'は行拗音' },
+      { roma: 'hyo', h: 'ひょ', k: 'ヒョ', type: '拗音', row: 'は行拗音' },
+      // ま行拗音
+      { roma: 'mya', h: 'みゃ', k: 'ミャ', type: '拗音', row: 'ま行拗音' },
+      { roma: 'myu', h: 'みゅ', k: 'ミュ', type: '拗音', row: 'ま行拗音' },
+      { roma: 'myo', h: 'みょ', k: 'ミョ', type: '拗音', row: 'ま行拗音' },
+      // ら行拗音
+      { roma: 'rya', h: 'りゃ', k: 'リャ', type: '拗音', row: 'ら行拗音' },
+      { roma: 'ryu', h: 'りゅ', k: 'リュ', type: '拗音', row: 'ら行拗音' },
+      { roma: 'ryo', h: 'りょ', k: 'リョ', type: '拗音', row: 'ら行拗音' },
+      // が行拗音
+      { roma: 'gya', h: 'ぎゃ', k: 'ギャ', type: '拗音', row: 'が行拗音' },
+      { roma: 'gyu', h: 'ぎゅ', k: 'ギュ', type: '拗音', row: 'が行拗音' },
+      { roma: 'gyo', h: 'ぎょ', k: 'ギョ', type: '拗音', row: 'が行拗音' },
+      // ざ行拗音
+      { roma: 'ja', h: 'じゃ', k: 'ジャ', type: '拗音', row: 'ざ行拗音' },
+      { roma: 'ju', h: 'じゅ', k: 'ジュ', type: '拗音', row: 'ざ行拗音' },
+      { roma: 'jo', h: 'じょ', k: 'ジョ', type: '拗音', row: 'ざ行拗音' },
+      // だ行拗音
+      { roma: 'dya', h: 'ぢゃ', k: 'ヂャ', type: '拗音', row: 'だ行拗音' },
+      { roma: 'dyu', h: 'ぢゅ', k: 'ヂュ', type: '拗音', row: 'だ行拗音' },
+      { roma: 'dyo', h: 'ぢょ', k: 'ヂョ', type: '拗音', row: 'だ行拗音' },
+      // ば行拗音
+      { roma: 'bya', h: 'びゃ', k: 'ビャ', type: '拗音', row: 'ば行拗音' },
+      { roma: 'byu', h: 'びゅ', k: 'ビュ', type: '拗音', row: 'ば行拗音' },
+      { roma: 'byo', h: 'びょ', k: 'ビョ', type: '拗音', row: 'ば行拗音' },
+      // ぱ行拗音
+      { roma: 'pya', h: 'ぴゃ', k: 'ピャ', type: '拗音', row: 'ぱ行拗音' },
+      { roma: 'pyu', h: 'ぴゅ', k: 'ピュ', type: '拗音', row: 'ぱ行拗音' },
+      { roma: 'pyo', h: 'ぴょ', k: 'ピョ', type: '拗音', row: 'ぱ行拗音' },
+    ];
+
+    // ========================================
+    // 笔顺 SVG 路径数据（仅清音）
+    // ========================================
+    const strokeData = {
+      'あ': { paths: ['M 28,38 L 72,38', 'M 50,38 L 50,82', 'M 32,62 Q 50,92 68,62'] },
+      'い': { paths: ['M 38,28 L 38,58 Q 38,75 55,75', 'M 62,28 L 62,62'] },
+      'う': { paths: ['M 52,28 L 52,35', 'M 35,45 L 68,45', 'M 52,45 L 25,78 Q 18,88 32,88'] },
+      'え': { paths: ['M 28,38 L 72,38', 'M 50,38 L 50,58', 'M 22,58 Q 50,95 78,58'] },
+      'お': { paths: ['M 25,38 L 75,38', 'M 55,38 L 35,82', 'M 35,55 L 35,82'] },
+      'か': { paths: ['M 20,35 L 80,35', 'M 62,35 L 42,82', 'M 32,50 L 32,82'] },
+      'き': { paths: ['M 25,30 L 75,30 L 75,55 L 25,55 Z', 'M 75,55 L 45,85'] },
+      'く': { paths: ['M 60,25 L 25,78 Q 18,88 32,85'] },
+      'け': { paths: ['M 30,28 L 30,82', 'M 38,38 L 72,38 L 72,55 L 38,55 Z'] },
+      'こ': { paths: ['M 28,38 L 72,38', 'M 28,68 L 72,68'] },
+      'さ': { paths: ['M 25,32 L 75,32', 'M 50,32 L 50,82', 'M 30,60 Q 50,88 70,60'] },
+      'し': { paths: ['M 40,22 L 40,58 Q 40,88 68,88'] },
+      'す': { paths: ['M 30,32 L 72,32', 'M 55,32 L 55,58 Q 55,72 72,72', 'M 30,58 L 30,82'] },
+      'せ': { paths: ['M 22,38 L 68,38', 'M 45,38 L 45,82', 'M 22,58 L 78,58'] },
+      'そ': { paths: ['M 35,25 L 68,25 L 68,48 Q 68,62 35,62 L 25,62', 'M 68,62 Q 48,92 75,90'] },
+      'た': { paths: ['M 28,32 L 72,32', 'M 50,32 L 50,55 L 32,55 L 32,82'] },
+      'ち': { paths: ['M 25,38 L 75,38', 'M 52,38 L 25,82'] },
+      'つ': { paths: ['M 35,30 Q 52,48 70,30 Q 70,52 52,62 Q 35,72 35,88'] },
+      'て': { paths: ['M 28,32 L 72,32', 'M 72,32 L 32,82'] },
+      'と': { paths: ['M 52,22 L 52,58 Q 52,78 72,78', 'M 52,58 L 28,82'] },
+      'な': { paths: ['M 25,30 L 72,30', 'M 50,30 L 50,52 L 30,52', 'M 40,52 L 40,78 Q 40,92 58,92', 'M 58,68 L 58,92 Q 58,105 80,98'] },
+      'に': { paths: ['M 30,22 L 30,82', 'M 30,48 L 72,48', 'M 55,48 L 55,82'] },
+      'ぬ': { paths: ['M 30,35 L 72,35', 'M 50,35 L 50,55 Q 50,78 28,78 L 22,78', 'M 50,55 L 50,68 Q 75,68 75,90 Q 52,102 28,90'] },
+      'の': { paths: ['M 62,22 Q 88,45 62,72 Q 38,95 18,72 Q 8,50 32,35 Q 56,20 62,22'] },
+      'は': { paths: ['M 25,30 L 72,30', 'M 48,30 L 48,82', 'M 25,58 L 25,82', 'M 72,58 L 72,82'] },
+      'ひ': { paths: ['M 30,38 Q 30,58 52,58 Q 72,58 72,38 Q 72,75 30,75 Q 18,88 25,92'] },
+      'ふ': { paths: ['M 50,22 L 50,32', 'M 32,42 L 68,42', 'M 50,42 L 25,72 Q 18,85 32,88', 'M 50,42 L 75,72 Q 82,85 68,88'] },
+      'へ': { paths: ['M 18,50 L 48,50 Q 52,55 52,62 Q 52,72 48,78 L 18,78', 'M 52,62 L 85,62 Q 92,62 95,50 Q 98,38 82,38'] },
+      'ほ': { paths: ['M 25,22 L 75,22', 'M 25,22 L 25,48 L 75,48 L 75,22', 'M 50,22 L 50,48', 'M 50,48 L 50,82', 'M 30,65 L 70,65'] },
+      'ま': { paths: ['M 25,30 L 75,30', 'M 25,30 L 25,58 L 75,58 L 75,30', 'M 50,58 L 50,85'] },
+      'み': { paths: ['M 35,22 L 35,52 Q 35,82 58,82 Q 80,82 80,58 Q 80,38 60,35'] },
+      'む': { paths: ['M 35,28 Q 52,28 68,28 Q 80,28 80,42 Q 80,58 52,58 Q 28,58 28,78 Q 28,98 55,98 Q 78,98 78,82'] },
+      'め': { paths: ['M 28,32 L 72,32', 'M 28,32 L 28,58 Q 28,80 52,80 Q 75,80 75,58 L 75,52', 'M 52,48 L 52,80'] },
+      'も': { paths: ['M 25,28 L 75,28 L 75,52', 'M 75,52 Q 75,78 50,78 Q 25,78 25,52', 'M 75,52 Q 75,92 50,92 Q 25,92 25,72'] },
+      'や': { paths: ['M 30,30 L 30,58 L 55,58', 'M 30,45 L 55,45', 'M 55,58 L 38,85'] },
+      'ゆ': { paths: ['M 30,35 Q 50,35 50,55 Q 50,75 30,75 Q 18,88 25,92', 'M 50,55 L 78,85'] },
+      'よ': { paths: ['M 30,38 L 72,38', 'M 50,38 L 50,65 Q 50,85 72,85', 'M 50,65 L 30,88'] },
+      'ら': { paths: ['M 38,22 L 38,55 Q 38,85 62,85', 'M 58,55 L 58,85 Q 58,98 78,98'] },
+      'り': { paths: ['M 38,22 L 38,58 Q 38,88 65,88', 'M 70,25 L 70,60 Q 70,78 85,78'] },
+      'る': { paths: ['M 30,28 L 30,55 Q 30,80 52,80 Q 72,80 72,58 Q 72,42 55,42 Q 45,42 45,58 Q 45,75 30,75'] },
+      'れ': { paths: ['M 30,25 L 30,62 Q 30,85 52,85 Q 72,85 72,58', 'M 30,45 L 72,45'] },
+      'ろ': { paths: ['M 30,32 L 30,60 Q 30,88 58,88 Q 80,88 80,62'] },
+      'わ': { paths: ['M 30,28 L 30,75 Q 30,95 52,95', 'M 72,28 L 72,52', 'M 72,52 L 72,78 Q 72,95 58,95'] },
+      'を': { paths: ['M 25,32 L 72,32', 'M 50,32 L 50,58 Q 50,78 72,78', 'M 30,55 L 30,82 Q 30,100 52,100', 'M 72,55 L 72,85'] },
+      'ん': { paths: ['M 38,22 L 38,58 Q 38,88 65,88 Q 85,88 85,68 Q 85,50 65,50 Q 48,50 48,62 Q 48,80 38,80'] }
+    };
+
+    // ========================================
+    // 状态管理
+    // ========================================
+    let currentFilter = 'all';
+    let currentDetailKana = null;
+    let quizScore = 0;
+    let currentQuestion = null;
+    let lastQuestionRoma = null;
+    let currentCorrectText = null;
+    let quizMode = 'roma'; // 'roma': 罗马音→假名, 'kana': 假名→罗马音, 'fav': 收藏模式
+    let favorites = JSON.parse(localStorage.getItem('kanaFavorites') || '[]');
+    let favQuestionIndex = 0;
+
+    // ========================================
+    // DOM 元素
+    // ========================================
+    const tabCards = document.getElementById('tab-cards');
+    const tabQuiz = document.getElementById('tab-quiz');
+    const sectionCards = document.getElementById('section-cards');
+    const sectionQuiz = document.getElementById('section-quiz');
+    const cardsGrid = document.getElementById('cards-grid');
+    const cardsFilter = document.getElementById('cards-filter');
+    const detailPanel = document.getElementById('detail-panel');
+    const overlay = document.getElementById('overlay');
+    const detailH = document.getElementById('detail-h');
+    const detailK = document.getElementById('detail-k');
+    const detailRoma = document.getElementById('detail-romaji');
+    const detailSvg = document.getElementById('detail-stroke-svg');
+    const detailDesc = document.getElementById('detail-stroke-desc');
+    const btnPlayAudio = document.getElementById('btn-play-audio');
+    const btnReplayStroke = document.getElementById('btn-replay-stroke');
+    const btnCloseDetail = document.getElementById('btn-close-detail');
+    const detailGifH = document.getElementById('detail-stroke-gif-h');
+    const detailGifK = document.getElementById('detail-stroke-gif-k');
+    const scoreValue = document.getElementById('score-value');
+    const quizRomaji = document.getElementById('quiz-romaji');
+    const quizTypeHint = document.getElementById('quiz-type-hint');
+    const quizOptions = document.getElementById('quiz-options');
+    const quizResult = document.getElementById('quiz-result');
+    const btnNext = document.getElementById('btn-next');
+    const btnFavorite = document.getElementById('btn-favorite');
+    const btnModeRoma = document.getElementById('btn-mode-roma');
+    const btnModeKana = document.getElementById('btn-mode-kana');
+    const btnModeFav = document.getElementById('btn-mode-fav');
+    const quizFavCount = document.getElementById('quiz-fav-count');
+
+    // ========================================
+    // 功能切换
+    // ========================================
+    tabCards.addEventListener('click', () => {
+      tabCards.classList.add('active');
+      tabQuiz.classList.remove('active');
+      sectionCards.classList.add('active');
+      sectionQuiz.classList.remove('active');
+      closeDetailPanel();
+    });
+
+    tabQuiz.addEventListener('click', () => {
+      tabQuiz.classList.add('active');
+      tabCards.classList.remove('active');
+      sectionQuiz.classList.add('active');
+      sectionCards.classList.remove('active');
+      closeDetailPanel();
+      if (!currentQuestion) startQuiz();
+    });
+
+    // ========================================
+    // 卡片筛选
+    // ========================================
+    cardsFilter.addEventListener('click', (e) => {
+      if (e.target.dataset.filter) {
+        cardsFilter.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        currentFilter = e.target.dataset.filter;
+        renderCards();
+      }
+    });
+
+    // ========================================
+    // 渲染卡片
+    // ========================================
+    function renderCards() {
+      const filtered = currentFilter === 'all'
+        ? gojūonData
+        : gojūonData.filter(k => k.type === currentFilter);
+
+      cardsGrid.innerHTML = filtered.map(k => `
+        <div class="kana-card" data-roma="${k.roma}">
+          <div class="hiragana">${k.h}</div>
+          <div class="katakana">${k.k}</div>
+          <div class="roma">${k.roma}</div>
+          <span class="type-badge ${k.type}">${k.type}</span>
+        </div>
+      `).join('');
+
+      // 绑定点击事件
+      cardsGrid.querySelectorAll('.kana-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const roma = card.dataset.roma;
+          const kana = gojūonData.find(k => k.roma === roma);
+          if (kana) showDetail(kana);
+        });
+      });
+    }
+
+    // ========================================
+    // 详情面板
+    // ========================================
+    function showDetail(kana) {
+      currentDetailKana = kana;
+      detailH.textContent = kana.h;
+      detailK.textContent = kana.k;
+      detailRoma.textContent = kana.roma;
+
+      let gifLoadedCount = 0;
+      let gifReportedCount = 0;
+      const totalGifs = 2;
+
+      // 重置状态
+      detailGifH.classList.remove('show');
+      detailGifK.classList.remove('show');
+      detailSvg.classList.remove('hidden');
+      document.getElementById('detail-stroke-gifs').classList.remove('show');
+
+      // 加载平假名GIF笔顺动画
+      const gifPathH = `gifs/${kana.roma}.gif`;
+      detailGifH.src = gifPathH;
+      detailGifH.onload = function() {
+        detailGifH.classList.add('show');
+        gifLoadedCount++;
+        gifReportedCount++;
+        checkGifLoaded();
+      };
+      detailGifH.onerror = function() {
+        detailGifH.classList.remove('show');
+        gifReportedCount++;
+        checkGifLoaded();
+      };
+
+      // 加载片假名GIF笔顺动画
+      const gifPathK = `gifs_pian/${kana.roma}.gif`;
+      detailGifK.src = gifPathK;
+      detailGifK.onload = function() {
+        detailGifK.classList.add('show');
+        gifLoadedCount++;
+        gifReportedCount++;
+        checkGifLoaded();
+      };
+      detailGifK.onerror = function() {
+        detailGifK.classList.remove('show');
+        gifReportedCount++;
+        checkGifLoaded();
+      };
+
+      function checkGifLoaded() {
+        if (gifLoadedCount > 0) {
+          // 至少有一个GIF加载成功，显示GIF容器，隐藏SVG
+          document.getElementById('detail-stroke-gifs').classList.add('show');
+          detailSvg.classList.add('hidden');
+        } else if (gifReportedCount === totalGifs) {
+          // 所有GIF都已报告且都失败了，使用SVG动画
+          document.getElementById('detail-stroke-gifs').classList.remove('show');
+          detailSvg.classList.remove('hidden');
+          const strokes = strokeData[kana.h] || strokeData[kana.k];
+          if (strokes) {
+            detailDesc.textContent = '';
+            playStrokeAnimation(strokes.paths);
+          } else {
+            detailDesc.textContent = '（笔顺数据暂缺）';
+            detailSvg.innerHTML = '';
+          }
+        }
+      }
+
+      // 不再自动播放读音 - 仅在用户点击按钮后播放
+      detailPanel.classList.add('show');
+      overlay.classList.add('show');
+    }
+
+    function closeDetailPanel() {
+      detailPanel.classList.remove('show');
+      overlay.classList.remove('show');
+      currentDetailKana = null;
+    }
+
+    btnCloseDetail.addEventListener('click', closeDetailPanel);
+    overlay.addEventListener('click', closeDetailPanel);
+
+    btnPlayAudio.addEventListener('click', () => {
+      if (currentDetailKana) {
+        playAudio(currentDetailKana.h);
+      }
+    });
+
+    btnReplayStroke.addEventListener('click', () => {
+      if (currentDetailKana) {
+        const t = Date.now();
+        detailGifH.src = '';
+        detailGifH.src = `gifs/${currentDetailKana.roma}.gif?t=${t}`;
+        detailGifK.src = '';
+        detailGifK.src = `gifs_pian/${currentDetailKana.roma}.gif?t=${t}`;
+      }
+    });
+
+    // ========================================
+    // 笔顺动画
+    // ========================================
+    function playStrokeAnimation(paths) {
+      detailSvg.innerHTML = '';
+
+      paths.forEach((path, i) => {
+        const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        pathEl.setAttribute('d', path);
+        pathEl.setAttribute('class', 'stroke-path');
+        pathEl.style.animationDelay = `${i * 0.4}s`;
+        detailSvg.appendChild(pathEl);
+
+        void detailSvg.offsetWidth;
+        pathEl.classList.add('animating');
+      });
+    }
+
+    // ========================================
+    // 语音合成
+    // ========================================
+    function playAudio(text) {
+      if (!('speechSynthesis' in window)) {
+        return;
+      }
+
+      // 取消之前的语音
+      speechSynthesis.cancel();
+
+      // 延迟一小段时间确保在移动端能正常工作
+      setTimeout(() => {
+        const utt = new SpeechSynthesisUtterance(text);
+        utt.lang = 'ja-JP';
+        utt.rate = 0.75;
+        utt.pitch = 1;
+
+        // 获取可用的声音
+        const voices = speechSynthesis.getVoices();
+        const japaneseVoice = voices.find(v => v.lang.startsWith('ja'));
+        if (japaneseVoice) {
+          utt.voice = japaneseVoice;
+        }
+
+        utt.onend = () => {};
+        utt.onerror = (e) => {
+          console.log('Speech error:', e);
+        };
+
+        speechSynthesis.speak(utt);
+      }, 50);
+    }
+
+    // 预加载语音列表（某些浏览器需要）
+    if ('speechSynthesis' in window) {
+      speechSynthesis.getVoices();
+      speechSynthesis.onvoiceschanged = () => {
+        speechSynthesis.getVoices();
+      };
+    }
+
+    // ========================================
+    // 测验功能
+    // ========================================
+
+    btnModeRoma.addEventListener('click', () => {
+      quizMode = 'roma';
+      btnModeRoma.classList.add('active');
+      btnModeKana.classList.remove('active');
+      btnModeFav.classList.remove('active');
+      quizScore = 0;
+      scoreValue.textContent = '0';
+      nextQuestion();
+    });
+
+    btnModeKana.addEventListener('click', () => {
+      quizMode = 'kana';
+      btnModeKana.classList.add('active');
+      btnModeRoma.classList.remove('active');
+      btnModeFav.classList.remove('active');
+      quizScore = 0;
+      scoreValue.textContent = '0';
+      nextQuestion();
+    });
+
+    btnModeFav.addEventListener('click', () => {
+      if (favorites.length === 0) {
+        quizResult.textContent = '暂无收藏题目';
+        quizResult.className = 'wrong';
+        return;
+      }
+      quizMode = 'fav';
+      btnModeFav.classList.add('active');
+      btnModeRoma.classList.remove('active');
+      btnModeKana.classList.remove('active');
+      quizScore = 0;
+      scoreValue.textContent = '0';
+      favQuestionIndex = 0;
+      nextQuestion();
+      updateFavCount();
+    });
+
+    // 收藏按钮
+    btnFavorite.addEventListener('click', () => {
+      if (!currentQuestion) return;
+      const roma = currentQuestion.roma;
+      const idx = favorites.indexOf(roma);
+      if (idx === -1) {
+        favorites.push(roma);
+        btnFavorite.classList.add('active');
+        btnFavorite.textContent = '★ 已收藏';
+      } else {
+        favorites.splice(idx, 1);
+        btnFavorite.classList.remove('active');
+        btnFavorite.textContent = '☆ 收藏此题';
+      }
+      localStorage.setItem('kanaFavorites', JSON.stringify(favorites));
+      updateFavCount();
+    });
+
+    function updateFavCount() {
+      if (favorites.length > 0) {
+        quizFavCount.textContent = `共 ${favorites.length} 道收藏题目`;
+      } else {
+        quizFavCount.textContent = '';
+      }
+    }
+
+    function startQuiz() {
+      quizScore = 0;
+      scoreValue.textContent = '0';
+      quizResult.textContent = '';
+      quizResult.className = '';
+      btnNext.disabled = true;
+      nextQuestion();
+    }
+
+    function nextQuestion() {
+      let available;
+      if (quizMode === 'fav') {
+        available = favorites.map(roma => gojūonData.find(k => k.roma === roma)).filter(Boolean);
+        if (available.length === 0) {
+          quizRomaji.textContent = '';
+          quizTypeHint.textContent = '';
+          quizOptions.innerHTML = '';
+          return;
+        }
+        currentQuestion = available[favQuestionIndex % available.length];
+      } else {
+        available = gojūonData.filter(k => k.roma !== lastQuestionRoma);
+        currentQuestion = available[Math.floor(Math.random() * available.length)];
+      }
+      lastQuestionRoma = currentQuestion.roma;
+
+      if (quizMode === 'roma') {
+        // 模式1: 罗马音 → 假名
+        quizRomaji.textContent = currentQuestion.roma;
+        quizTypeHint.textContent = `（${currentQuestion.type}）`;
+      } else if (quizMode === 'kana') {
+        // 模式2: 假名 → 罗马音
+        const useHiragana = Math.random() > 0.5;
+        const kanaText = useHiragana ? currentQuestion.h : currentQuestion.k;
+        quizRomaji.textContent = kanaText;
+        quizTypeHint.textContent = `（${currentQuestion.type} - ${useHiragana ? '平假名' : '片假名'}）`;
+      } else {
+        // 收藏模式: 随机选择罗马音或假名模式
+        const useRoma = Math.random() > 0.5;
+        if (useRoma) {
+          quizRomaji.textContent = currentQuestion.roma;
+          quizTypeHint.textContent = '（收藏）';
+        } else {
+          const useHiragana = Math.random() > 0.5;
+          quizRomaji.textContent = useHiragana ? currentQuestion.h : currentQuestion.k;
+          quizTypeHint.textContent = '（收藏）';
+        }
+      }
+
+      quizResult.textContent = '';
+      quizResult.className = '';
+      btnNext.disabled = true;
+
+      const { options, correctText } = generateOptions(currentQuestion);
+      currentCorrectText = correctText;
+
+      quizOptions.innerHTML = options.map(opt => `
+        <button class="quiz-option" data-kana="${opt}">${opt}</button>
+      `).join('');
+
+      quizOptions.querySelectorAll('.quiz-option').forEach(btn => {
+        btn.addEventListener('click', () => checkAnswer(btn));
+      });
+
+      // 更新收藏按钮状态
+      updateFavoriteBtnState();
+    }
+
+    function updateFavoriteBtnState() {
+      if (!currentQuestion) return;
+      const isFav = favorites.includes(currentQuestion.roma);
+      if (isFav) {
+        btnFavorite.classList.add('active');
+        btnFavorite.textContent = '★ 已收藏';
+      } else {
+        btnFavorite.classList.remove('active');
+        btnFavorite.textContent = '☆ 收藏此题';
+      }
+    }
+
+    function generateOptions(correct) {
+      let options = [];
+      let correctText = '';
+
+      if (quizMode === 'roma' || quizMode === 'fav') {
+        // 模式1: 罗马音 → 假名 (收藏模式也用这个逻辑)
+        const useHiragana = Math.random() > 0.5;
+        correctText = useHiragana ? correct.h : correct.k;
+        options = [correctText];
+
+        const others = gojūonData.filter(k => k.roma !== correct.roma);
+        while (options.length < 4) {
+          const randomKana = others[Math.floor(Math.random() * others.length)];
+          const randomOpt = useHiragana ? randomKana.h : randomKana.k;
+          if (!options.includes(randomOpt)) {
+            options.push(randomOpt);
+          }
+        }
+      } else {
+        // 模式2: 假名 → 罗马音
+        correctText = correct.roma;
+        options = [correctText];
+
+        const others = gojūonData.filter(k => k.roma !== correct.roma);
+        while (options.length < 4) {
+          const randomKana = others[Math.floor(Math.random() * others.length)];
+          if (!options.includes(randomKana.roma)) {
+            options.push(randomKana.roma);
+          }
+        }
+      }
+
+      const shuffledOptions = options.sort(() => Math.random() - 0.5);
+      return { options: shuffledOptions, correctText };
+    }
+
+    function checkAnswer(btn) {
+      const selected = btn.dataset.kana;
+      const correctText = currentCorrectText;
+
+      quizOptions.querySelectorAll('.quiz-option').forEach(b => {
+        b.classList.add('disabled');
+        if (b.dataset.kana === correctText) {
+          b.classList.add('correct');
+        }
+      });
+
+      if (selected === correctText) {
+        quizResult.textContent = '✓ 正确！';
+        quizResult.className = 'correct';
+        quizScore++;
+        scoreValue.textContent = quizScore;
+        playAudio(currentQuestion.h);
+      } else {
+        btn.classList.add('wrong');
+        quizResult.textContent = `✗ 错误！正确答案是 ${correctText}`;
+        quizResult.className = 'wrong';
+        playAudio(currentQuestion.h);
+      }
+
+      // 收藏模式下答对后自动下一题
+      if (quizMode === 'fav' && selected === correctText) {
+        favQuestionIndex++;
+        if (favQuestionIndex >= favorites.length) {
+          favQuestionIndex = 0;
+        }
+        setTimeout(() => nextQuestion(), 800);
+      } else {
+        btnNext.disabled = false;
+      }
+    }
+
+    btnNext.addEventListener('click', nextQuestion);
+
+    const btnReplayQuiz = document.getElementById('btn-replay-quiz');
+    btnReplayQuiz.addEventListener('click', () => {
+      if (currentQuestion) playAudio(currentQuestion.h);
+    });
+
+    // ========================================
+    // 初始化
+    // ========================================
+    renderCards();
+    updateFavCount();
+
+    // ========================================
+    // PWA Service Worker 注册
+    // ========================================
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((registration) => {
+            console.log('SW registered:', registration.scope);
+          })
+          .catch((error) => {
+            console.log('SW registration failed:', error);
+          });
+      });
+    }
+  </script>
+</body>
+</html>
